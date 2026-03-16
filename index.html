@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Any2Noise - File to Audio Player</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #eee;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 25px;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: #00d9ff;
+            background: rgba(0, 217, 255, 0.1);
+        }
+
+        .upload-zone.has-file {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #aaa;
+        }
+
+        .file-info {
+            display: none;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+
+        .file-info.visible {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+        }
+
+        .clear-btn {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0 5px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        select, input[type="range"] {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            color: #eee;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        select {
+            outline: none;
+        }
+
+        select option {
+            background: #1a1a2e;
+        }
+
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .range-container input {
+            flex: 1;
+        }
+
+        .range-value {
+            min-width: 60px;
+            text-align: right;
+            font-size: 0.85rem;
+            color: #00d9ff;
+        }
+
+        .playback-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(0, 217, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #eee;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .visualizer {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .visualizer canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .status.error {
+            color: #ff6b6b;
+        }
+
+        .status.success {
+            color: #00ff88;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .volume-control label {
+            margin-bottom: 0;
+            min-width: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Any2Noise</h1>
+        <p class="subtitle">Turn any file into audio</p>
+
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">
+                Drop any file here or click to browse
+            </div>
+        </div>
+        <input type="file" id="fileInput">
+
+        <div class="file-info" id="fileInfo">
+            <span class="file-name" id="fileName"></span>
+            <button class="clear-btn" id="clearBtn">×</button>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Channels</label>
+                <select id="channels">
+                    <option value="1">Mono</option>
+                    <option value="2" selected>Stereo</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Sample Rate</label>
+                <select id="sampleRate">
+                    <option value="8000">8 kHz</option>
+                    <option value="11025">11.025 kHz</option>
+                    <option value="22050">22.05 kHz</option>
+                    <option value="44100" selected>44.1 kHz</option>
+                    <option value="48000">48 kHz</option>
+                    <option value="96000">96 kHz</option>
+                </select>
+            </div>
+            <div class="control-group full-width">
+                <label>Bytes per Sample</label>
+                <select id="bytesPerSample">
+                    <option value="1">1 byte (8-bit)</option>
+                    <option value="2" selected>2 bytes (16-bit)</option>
+                    <option value="3">3 bytes (24-bit)</option>
+                    <option value="4">4 bytes (32-bit)</option>
+                </select>
+            </div>
+            <div class="control-group full-width">
+                <label>Interpretation</label>
+                <select id="interpretation">
+                    <option value="unsigned">Unsigned (0-255 for 8-bit)</option>
+                    <option value="signed" selected>Signed (-128 to 127 for 8-bit)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="volume-control">
+            <label>🔊</label>
+            <input type="range" id="volume" min="0" max="100" value="70">
+            <span class="range-value" id="volumeValue">70%</span>
+        </div>
+
+        <div class="playback-controls">
+            <button class="btn btn-primary" id="playBtn" disabled>▶ Play</button>
+            <button class="btn btn-secondary" id="stopBtn" disabled>■ Stop</button>
+        </div>
+
+        <div class="visualizer">
+            <canvas id="visualizer"></canvas>
+        </div>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        // State
+        let audioContext = null;
+        let audioBuffer = null;
+        let sourceNode = null;
+        let analyser = null;
+        let gainNode = null;
+        let isPlaying = false;
+        let animationId = null;
+
+        // Elements
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const clearBtn = document.getElementById('clearBtn');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusEl = document.getElementById('status');
+        const visualizerCanvas = document.getElementById('visualizer');
+        const visualizerCtx = visualizerCanvas.getContext('2d');
+        const volumeSlider = document.getElementById('volume');
+        const volumeValue = document.getElementById('volumeValue');
+
+        // Settings
+        const channelsSelect = document.getElementById('channels');
+        const sampleRateSelect = document.getElementById('sampleRate');
+        const bytesPerSampleSelect = document.getElementById('bytesPerSample');
+        const interpretationSelect = document.getElementById('interpretation');
+
+        // Resize canvas
+        function resizeCanvas() {
+            visualizerCanvas.width = visualizerCanvas.offsetWidth;
+            visualizerCanvas.height = visualizerCanvas.offsetHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Volume control
+        volumeSlider.addEventListener('input', () => {
+            volumeValue.textContent = `${volumeSlider.value}%`;
+            if (gainNode) {
+                gainNode.gain.value = volumeSlider.value / 100;
+            }
+        });
+
+        // File upload handling
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            stopAudio();
+            fileInput.value = '';
+            fileInfo.classList.remove('visible');
+            uploadZone.classList.remove('has-file');
+            playBtn.disabled = true;
+            statusEl.textContent = '';
+            audioBuffer = null;
+        });
+
+        function handleFile(file) {
+            stopAudio();
+            
+            fileName.textContent = `${file.name} (${formatFileSize(file.size)})`;
+            fileInfo.classList.add('visible');
+            uploadZone.classList.add('has-file');
+            statusEl.textContent = 'Loading file...';
+            statusEl.className = 'status';
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    processAudioData(e.target.result);
+                    statusEl.textContent = 'Ready to play!';
+                    statusEl.className = 'status success';
+                    playBtn.disabled = false;
+                } catch (err) {
+                    statusEl.textContent = `Error: ${err.message}`;
+                    statusEl.className = 'status error';
+                    playBtn.disabled = true;
+                }
+            };
+            reader.onerror = () => {
+                statusEl.textContent = 'Error reading file';
+                statusEl.className = 'status error';
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        function processAudioData(arrayBuffer) {
+            const channels = parseInt(channelsSelect.value);
+            const sampleRate = parseInt(sampleRateSelect.value);
+            const bytesPerSample = parseInt(bytesPerSampleSelect.value);
+            const isSigned = interpretationSelect.value === 'signed';
+
+            const data = new Uint8Array(arrayBuffer);
+            const totalSamples = Math.floor((data.length / bytesPerSample) / channels);
+            
+            if (totalSamples === 0) {
+                throw new Error('File is too small to create audio');
+            }
+
+            // Create audio context with specified sample rate
+            audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: sampleRate
+            });
+
+            audioBuffer = audioContext.createBuffer(channels, totalSamples, sampleRate);
+
+            // Convert raw bytes to audio samples
+            for (let channel = 0; channel < channels; channel++) {
+                const channelData = audioBuffer.getChannelData(channel);
+                
+                for (let i = 0; i < totalSamples; i++) {
+                    const byteOffset = (i * channels + channel) * bytesPerSample;
+                    
+                    if (byteOffset + bytesPerSample > data.length) {
+                        channelData[i] = 0;
+                        continue;
+                    }
+
+                    let sample;
+                    switch (bytesPerSample) {
+                        case 1:
+                            sample = data[byteOffset];
+                            if (isSigned) {
+                                sample = sample - 128; // Convert to signed
+                                sample = sample / 128; // Normalize to -1 to 1
+                            } else {
+                                sample = (sample - 127.5) / 127.5; // Center around 0
+                            }
+                            break;
+                        case 2:
+                            sample = data[byteOffset] | (data[byteOffset + 1] << 8);
+                            if (isSigned) {
+                                sample = sample / 32768; // Normalize signed 16-bit
+                            } else {
+                                sample = (sample - 32767.5) / 32767.5; // Center unsigned
+                            }
+                            break;
+                        case 3:
+                            sample = data[byteOffset] | 
+                                   (data[byteOffset + 1] << 8) | 
+                                   (data[byteOffset + 2] << 16);
+                            if (isSigned) {
+                                sample = sample / 8388608; // Normalize signed 24-bit
+                            } else {
+                                sample = (sample - 8388607.5) / 8388607.5;
+                            }
+                            break;
+                        case 4:
+                            // Use DataView for proper 32-bit handling
+                            const view = new DataView(data.buffer, byteOffset, 4);
+                            sample = view.getInt32(0, true); // Little-endian
+                            if (isSigned) {
+                                sample = sample / 2147483648; // Normalize signed 32-bit
+                            } else {
+                                sample = (sample - 2147483647.5) / 2147483647.5;
+                            }
+                            break;
+                        default:
+                            sample = 0;
+                    }
+
+                    // Clamp to prevent clipping
+                    channelData[i] = Math.max(-1, Math.min(1, sample));
+                }
+            }
+
+            // Calculate duration
+            const duration = totalSamples / sampleRate;
+            const minutes = Math.floor(duration / 60);
+            const seconds = (duration % 60).toFixed(1);
+            statusEl.textContent = `Duration: ${minutes}:${seconds.padStart(5, '0')} | Samples: ${totalSamples.toLocaleString()}`;
+        }
+
+        function playAudio() {
+            if (!audioBuffer || isPlaying) return;
+
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
+            sourceNode = audioContext.createBufferSource();
+            sourceNode.buffer = audioBuffer;
+
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+
+            gainNode = audioContext.createGain();
+            gainNode.gain.value = volumeSlider.value / 100;
+
+            sourceNode.connect(gainNode);
+            gainNode.connect(analyser);
+            analyser.connect(audioContext.destination);
+
+            sourceNode.start(0);
+            isPlaying = true;
+            playBtn.textContent = '⏸ Playing...';
+            playBtn.disabled = true;
+            stopBtn.disabled = false;
+
+            sourceNode.onended = () => {
+                isPlaying = false;
+                playBtn.textContent = '▶ Play';
+                playBtn.disabled = !audioBuffer;
+                stopBtn.disabled = true;
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+            };
+
+            drawVisualizer();
+        }
+
+        function stopAudio() {
+            if (sourceNode) {
+                try {
+                    sourceNode.stop();
+                } catch (e) {
+                    // Already stopped
+                }
+                sourceNode = null;
+            }
+            isPlaying = false;
+            playBtn.textContent = '▶ Play';
+            playBtn.disabled = !audioBuffer;
+            stopBtn.disabled = true;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            // Clear visualizer
+            visualizerCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            visualizerCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+        }
+
+        function drawVisualizer() {
+            if (!analyser || !isPlaying) return;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                if (!isPlaying) return;
+
+                animationId = requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+
+                visualizerCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                visualizerCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+
+                const barWidth = (visualizerCanvas.width / bufferLength) * 2.5;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = (dataArray[i] / 255) * visualizerCanvas.height;
+                    
+                    const gradient = visualizerCtx.createLinearGradient(0, visualizerCanvas.height, 0, 0);
+                    gradient.addColorStop(0, '#00d9ff');
+                    gradient.addColorStop(1, '#00ff88');
+                    
+                    visualizerCtx.fillStyle = gradient;
+                    visualizerCtx.fillRect(x, visualizerCanvas.height - barHeight, barWidth, barHeight);
+                    
+                    x += barWidth + 1;
+                }
+            }
+
+            draw();
+        }
+
+        // Settings change - need to reprocess file
+        [channelsSelect, sampleRateSelect, bytesPerSampleSelect, interpretationSelect].forEach(el => {
+            el.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    stopAudio();
+                    statusEl.textContent = 'Settings changed. Re-processing...';
+                    statusEl.className = 'status';
+                    
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            processAudioData(e.target.result);
+                            statusEl.textContent = 'Ready to play!';
+                            statusEl.className = 'status success';
+                            playBtn.disabled = false;
+                        } catch (err) {
+                            statusEl.textContent = `Error: ${err.message}`;
+                            statusEl.className = 'status error';
+                        }
+                    };
+                    reader.readAsArrayBuffer(fileInput.files[0]);
+                }
+            });
+        });
+
+        playBtn.addEventListener('click', playAudio);
+        stopBtn.addEventListener('click', stopAudio);
+    </script>
+</body>
+</html>
