@@ -15,13 +15,14 @@
             font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
             background: #000;
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 20px;
+            align-items: flex-start;
+            padding: 0;
             color: #fff;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         /* Static noise background */
@@ -32,7 +33,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background-image: 
+            background-image:
                 repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent 2px, rgba(255,255,255,0.03) 3px),
                 repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 4px);
             animation: staticNoise 0.2s steps(4) infinite;
@@ -63,13 +64,11 @@
 
         .container {
             background: rgba(10, 10, 10, 0.9);
-            border-radius: 0;
-            padding: 40px;
-            max-width: 520px;
+            padding: 24px 16px;
             width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
             position: relative;
+            min-height: 100vh;
+            min-height: 100dvh;
         }
 
         .container::before {
@@ -85,7 +84,7 @@
         h1 {
             text-align: center;
             margin-bottom: 8px;
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: 400;
             letter-spacing: 4px;
             text-transform: uppercase;
@@ -95,7 +94,7 @@
         .subtitle {
             text-align: center;
             color: rgba(255, 255, 255, 0.4);
-            margin-bottom: 30px;
+            margin-bottom: 24px;
             font-size: 0.75rem;
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -103,13 +102,13 @@
 
         .upload-zone {
             border: 1px dashed rgba(255, 255, 255, 0.25);
-            border-radius: 0;
-            padding: 35px 20px;
+            padding: 30px 16px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             background: rgba(255, 255, 255, 0.02);
+            -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
         }
 
         .upload-zone:hover,
@@ -132,7 +131,7 @@
 
         .upload-text {
             color: rgba(255, 255, 255, 0.5);
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             letter-spacing: 1px;
         }
 
@@ -140,8 +139,7 @@
             display: none;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 0;
-            padding: 10px 12px;
+            padding: 12px;
             margin-bottom: 20px;
             font-size: 0.75rem;
             font-family: inherit;
@@ -157,7 +155,8 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            max-width: 280px;
+            min-width: 0;
+            flex: 1;
             color: rgba(255, 255, 255, 0.7);
         }
 
@@ -167,9 +166,15 @@
             color: #fff;
             cursor: pointer;
             font-size: 1.4rem;
-            padding: 0 5px;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             opacity: 0.6;
             transition: opacity 0.2s;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
         }
 
         .clear-btn:hover {
@@ -178,9 +183,9 @@
 
         .controls {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 12px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .control-group {
@@ -200,33 +205,31 @@
             text-transform: uppercase;
         }
 
-        select, input[type="range"] {
+        select {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 0;
-            padding: 10px 12px;
+            padding: 12px;
             color: #fff;
-            font-size: 0.8rem;
+            font-size: 16px;
             font-family: inherit;
             cursor: pointer;
             transition: all 0.2s;
-        }
-
-        select:hover, input[type="range"]:hover {
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        select:focus, input[type="range"]:focus {
-            outline: none;
-            border-color: #fff;
-        }
-
-        select {
             outline: none;
             -webkit-appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 12px center;
+            min-height: 48px;
+        }
+
+        select:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #fff;
         }
 
         select option {
@@ -254,11 +257,12 @@
 
         .range-container input::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 12px;
-            height: 12px;
+            width: 24px;
+            height: 24px;
             background: #fff;
+            border-radius: 50%;
             cursor: pointer;
-            margin-top: -5px;
+            margin-top: -11px;
         }
 
         .range-value {
@@ -270,16 +274,16 @@
 
         .playback-controls {
             display: flex;
-            gap: 12px;
-            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
             margin-bottom: 20px;
         }
 
         .btn {
-            padding: 14px 35px;
+            padding: 16px;
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 0;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             cursor: pointer;
             transition: all 0.2s ease;
             font-weight: 400;
@@ -288,6 +292,8 @@
             background: transparent;
             color: #fff;
             font-family: inherit;
+            min-height: 48px;
+            -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
         }
 
         .btn-primary {
@@ -313,11 +319,14 @@
             cursor: not-allowed;
         }
 
+        .btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
         .visualizer {
             background: rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0;
-            height: 70px;
+            height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -372,18 +381,59 @@
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 10px;
-            height: 10px;
+            width: 24px;
+            height: 24px;
             background: #fff;
+            border-radius: 50%;
             cursor: pointer;
         }
 
         input[type="range"]::-moz-range-thumb {
-            width: 10px;
-            height: 10px;
+            width: 24px;
+            height: 24px;
             background: #fff;
             cursor: pointer;
             border: none;
+            border-radius: 50%;
+        }
+
+        /* Desktop */
+        @media (min-width: 540px) {
+            body {
+                align-items: center;
+                padding: 20px;
+            }
+
+            .container {
+                max-width: 520px;
+                padding: 40px;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+                min-height: auto;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .controls {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .playback-controls {
+                flex-direction: row;
+                justify-content: center;
+            }
+
+            .btn {
+                padding: 14px 35px;
+                font-size: 0.75rem;
+            }
+
+            select {
+                font-size: 0.8rem;
+                padding: 10px 12px;
+            }
         }
     </style>
 </head>
@@ -395,7 +445,7 @@
         <div class="upload-zone" id="uploadZone">
             <div class="upload-icon">[+]</div>
             <div class="upload-text">
-                Drop any file here or click to browse
+                Tap to browse or drop a file
             </div>
         </div>
         <input type="file" id="fileInput">
