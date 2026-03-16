@@ -759,10 +759,11 @@
         [channelsSelect, sampleRateSelect, bytesPerSampleSelect, interpretationSelect].forEach(el => {
             el.addEventListener('change', () => {
                 if (fileInput.files.length > 0) {
+                    const wasPlaying = isPlaying;
                     stopAudio();
                     statusEl.textContent = 'Settings changed. Re-processing...';
                     statusEl.className = 'status';
-                    
+
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         try {
@@ -770,6 +771,10 @@
                             statusEl.textContent = 'Ready to play!';
                             statusEl.className = 'status success';
                             playBtn.disabled = false;
+                            // Auto-play from beginning if audio was playing
+                            if (wasPlaying) {
+                                playAudio();
+                            }
                         } catch (err) {
                             statusEl.textContent = `Error: ${err.message}`;
                             statusEl.className = 'status error';
