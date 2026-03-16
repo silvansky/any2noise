@@ -822,8 +822,8 @@
                     reader.onload = (e) => {
                         try {
                             processAudioData(e.target.result);
-                            statusEl.textContent = 'Ready to play!';
-                            statusEl.className = 'status success';
+                            statusEl.textContent = '';
+                            statusEl.className = 'status';
                             playBtn.disabled = false;
                             // Auto-play from beginning if audio was playing
                             if (wasPlaying) {
