@@ -450,7 +450,7 @@
 
         <div class="playback-controls">
             <button class="btn btn-primary" id="playBtn" disabled>Play</button>
-            <button class="btn btn-secondary" id="stopBtn" disabled>Stop</button>
+            <button class="btn btn-secondary" id="saveBtn" disabled>Save as WAV</button>
         </div>
 
         <div class="visualizer">
@@ -477,7 +477,7 @@
         const fileName = document.getElementById('fileName');
         const clearBtn = document.getElementById('clearBtn');
         const playBtn = document.getElementById('playBtn');
-        const stopBtn = document.getElementById('stopBtn');
+        const saveBtn = document.getElementById('saveBtn');
         const statusEl = document.getElementById('status');
         const visualizerCanvas = document.getElementById('visualizer');
         const visualizerCtx = visualizerCanvas.getContext('2d');
@@ -537,6 +537,7 @@
             fileInfo.classList.remove('visible');
             uploadZone.classList.remove('has-file');
             playBtn.disabled = true;
+            saveBtn.disabled = true;
             statusEl.textContent = '';
             audioBuffer = null;
         });
@@ -554,13 +555,15 @@
             reader.onload = (e) => {
                 try {
                     processAudioData(e.target.result);
-                    statusEl.textContent = 'Ready to play!';
-                    statusEl.className = 'status success';
+                    statusEl.textContent = '';
+                    statusEl.className = 'status';
                     playBtn.disabled = false;
+                    saveBtn.disabled = false;
                 } catch (err) {
                     statusEl.textContent = `Error: ${err.message}`;
                     statusEl.className = 'status error';
                     playBtn.disabled = true;
+                    saveBtn.disabled = true;
                 }
             };
             reader.onerror = () => {
@@ -663,8 +666,12 @@
             statusEl.textContent = `Duration: ${minutes}:${seconds.padStart(5, '0')} | Samples: ${totalSamples.toLocaleString()}`;
         }
 
-        function playAudio() {
-            if (!audioBuffer || isPlaying) return;
+        function togglePlay() {
+            if (isPlaying) {
+                stopAudio();
+                return;
+            }
+            if (!audioBuffer) return;
 
             if (audioContext && audioContext.state === 'suspended') {
                 audioContext.resume();
@@ -685,15 +692,12 @@
 
             sourceNode.start(0);
             isPlaying = true;
-            playBtn.textContent = 'Playing...';
-            playBtn.disabled = true;
-            stopBtn.disabled = false;
+            playBtn.textContent = 'Stop';
 
             sourceNode.onended = () => {
                 isPlaying = false;
                 playBtn.textContent = 'Play';
                 playBtn.disabled = !audioBuffer;
-                stopBtn.disabled = true;
                 if (animationId) {
                     cancelAnimationFrame(animationId);
                 }
@@ -715,7 +719,6 @@
             isPlaying = false;
             playBtn.textContent = 'Play';
             playBtn.disabled = !audioBuffer;
-            stopBtn.disabled = true;
             if (animationId) {
                 cancelAnimationFrame(animationId);
                 animationId = null;
@@ -774,7 +777,7 @@
                             playBtn.disabled = false;
                             // Auto-play from beginning if audio was playing
                             if (wasPlaying) {
-                                playAudio();
+                                togglePlay();
                             }
                         } catch (err) {
                             statusEl.textContent = `Error: ${err.message}`;
@@ -786,8 +789,77 @@
             });
         });
 
-        playBtn.addEventListener('click', playAudio);
-        stopBtn.addEventListener('click', stopAudio);
+        // Save as WAV
+        function saveAsWav() {
+            if (!audioBuffer) return;
+
+            const numChannels = audioBuffer.numberOfChannels;
+            const sampleRate = audioBuffer.sampleRate;
+            const numSamples = audioBuffer.length;
+            const bytesPerSample = 2; // 16-bit WAV
+            const blockAlign = numChannels * bytesPerSample;
+            const byteRate = sampleRate * blockAlign;
+            const dataSize = numSamples * blockAlign;
+            const fileSize = 44 + dataSize;
+
+            const buffer = new ArrayBuffer(fileSize);
+            const view = new DataView(buffer);
+
+            // RIFF header
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, fileSize - 8, true);
+            writeString(view, 8, 'WAVE');
+
+            // fmt chunk
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true); // chunk size
+            view.setUint16(20, 1, true); // PCM format
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, byteRate, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, 16, true); // bits per sample
+
+            // data chunk
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataSize, true);
+
+            // Write audio data
+            const channelData = [];
+            for (let ch = 0; ch < numChannels; ch++) {
+                channelData.push(audioBuffer.getChannelData(ch));
+            }
+
+            let offset = 44;
+            for (let i = 0; i < numSamples; i++) {
+                for (let ch = 0; ch < numChannels; ch++) {
+                    const sample = Math.max(-1, Math.min(1, channelData[ch][i]));
+                    const intSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                    view.setInt16(offset, intSample, true);
+                    offset += 2;
+                }
+            }
+
+            // Create download
+            const blob = new Blob([buffer], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'any2noise-export.wav';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        playBtn.addEventListener('click', togglePlay);
+        saveBtn.addEventListener('click', saveAsWav);
     </script>
 </body>
 </html>
