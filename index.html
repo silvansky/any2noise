@@ -326,7 +326,7 @@
         .visualizer {
             background: rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            height: 80px;
+            height: 100px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -781,28 +781,44 @@
         function drawVisualizer() {
             if (!analyser || !isPlaying) return;
 
+            analyser.fftSize = 2048;
+            analyser.smoothingTimeConstant = 0.75;
+            analyser.minDecibels = -90;
+            analyser.maxDecibels = -10;
             const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
 
+            // Only show lower half of spectrum (most content is there)
+            const usableBins = Math.floor(bufferLength * 0.5);
+
             function draw() {
                 if (!isPlaying) return;
-
                 animationId = requestAnimationFrame(draw);
                 analyser.getByteFrequencyData(dataArray);
 
-                visualizerCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-                visualizerCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+                const w = visualizerCanvas.width;
+                const h = visualizerCanvas.height;
 
-                const barWidth = (visualizerCanvas.width / bufferLength) * 2.5;
-                let x = 0;
+                // Shift left by 2px
+                const imageData = visualizerCtx.getImageData(2, 0, w - 2, h);
+                visualizerCtx.putImageData(imageData, 0, 0);
 
-                for (let i = 0; i < bufferLength; i++) {
-                    const barHeight = (dataArray[i] / 255) * visualizerCanvas.height;
-                    
-                    visualizerCtx.fillStyle = `rgba(255, 255, 255, ${0.3 + (dataArray[i] / 255) * 0.7})`;
-                    visualizerCtx.fillRect(x, visualizerCanvas.height - barHeight, barWidth, barHeight);
-                    
-                    x += barWidth + 1;
+                // Clear right column
+                visualizerCtx.fillStyle = '#000';
+                visualizerCtx.fillRect(w - 2, 0, 2, h);
+
+                // Map frequency bins to pixels with log scale
+                for (let py = 0; py < h; py++) {
+                    const ratio = 1 - py / h;
+                    // Log scale: map pixel position to frequency bin
+                    const bin = Math.floor(Math.pow(ratio, 2.5) * usableBins);
+                    if (bin >= usableBins) continue;
+                    const v = dataArray[bin] / 255;
+                    if (v < 0.01) continue;
+                    // Boost contrast
+                    const brightness = Math.pow(v, 0.6);
+                    visualizerCtx.fillStyle = `rgba(255, 255, 255, ${brightness})`;
+                    visualizerCtx.fillRect(w - 2, py, 2, 1);
                 }
             }
 
