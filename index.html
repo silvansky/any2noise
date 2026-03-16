@@ -704,6 +704,7 @@
 
         function stopAudio() {
             if (sourceNode) {
+                sourceNode.onended = null; // Prevent old handler from firing
                 try {
                     sourceNode.stop();
                 } catch (e) {
