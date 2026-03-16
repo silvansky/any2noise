@@ -12,82 +12,139 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            background: #000;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            color: #eee;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Static noise background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent 2px, rgba(255,255,255,0.03) 3px),
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 4px);
+            animation: staticNoise 0.2s steps(4) infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes staticNoise {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(-5%, -5%); }
+            50% { transform: translate(5%, -5%); }
+            75% { transform: translate(-5%, 5%); }
+            100% { transform: translate(5%, 5%); }
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
+            background: rgba(10, 10, 10, 0.9);
+            border-radius: 0;
             padding: 40px;
-            max-width: 500px;
+            max-width: 520px;
             width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
         }
 
         h1 {
             text-align: center;
-            margin-bottom: 10px;
-            font-size: 1.8rem;
-            background: linear-gradient(90deg, #00d9ff, #00ff88);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            margin-bottom: 8px;
+            font-size: 1.6rem;
+            font-weight: 400;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #fff;
         }
 
         .subtitle {
             text-align: center;
-            color: #888;
+            color: rgba(255, 255, 255, 0.4);
             margin-bottom: 30px;
-            font-size: 0.9rem;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
         .upload-zone {
-            border: 2px dashed rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            padding: 40px 20px;
+            border: 1px dashed rgba(255, 255, 255, 0.25);
+            border-radius: 0;
+            padding: 35px 20px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.02);
         }
 
         .upload-zone:hover,
         .upload-zone.dragover {
-            border-color: #00d9ff;
-            background: rgba(0, 217, 255, 0.1);
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .upload-zone.has-file {
-            border-color: #00ff88;
-            background: rgba(0, 255, 136, 0.1);
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+            border-style: solid;
         }
 
         .upload-icon {
-            font-size: 3rem;
-            margin-bottom: 10px;
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.6;
         }
 
         .upload-text {
-            color: #aaa;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8rem;
+            letter-spacing: 1px;
         }
 
         .file-info {
             display: none;
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid #00ff88;
-            border-radius: 8px;
-            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0;
+            padding: 10px 12px;
             margin-bottom: 20px;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
+            font-family: inherit;
         }
 
         .file-info.visible {
@@ -100,22 +157,29 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            max-width: 200px;
+            max-width: 280px;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .clear-btn {
             background: none;
             border: none;
-            color: #ff6b6b;
+            color: #fff;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             padding: 0 5px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .clear-btn:hover {
+            opacity: 1;
         }
 
         .controls {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 12px;
             margin-bottom: 25px;
         }
 
@@ -129,27 +193,45 @@
         }
 
         label {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 5px;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
         select, input[type="range"] {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 10px;
-            color: #eee;
-            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 0;
+            padding: 10px 12px;
+            color: #fff;
+            font-size: 0.8rem;
+            font-family: inherit;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        select:hover, input[type="range"]:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        select:focus, input[type="range"]:focus {
+            outline: none;
+            border-color: #fff;
         }
 
         select {
             outline: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
         }
 
         select option {
-            background: #1a1a2e;
+            background: #0a0a0a;
+            color: #fff;
         }
 
         .range-container {
@@ -160,61 +242,82 @@
 
         .range-container input {
             flex: 1;
+            -webkit-appearance: none;
+            background: transparent;
+        }
+
+        .range-container input::-webkit-slider-runnable-track {
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+        }
+
+        .range-container input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            cursor: pointer;
+            margin-top: -5px;
         }
 
         .range-value {
-            min-width: 60px;
+            min-width: 50px;
             text-align: right;
-            font-size: 0.85rem;
-            color: #00d9ff;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .playback-controls {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: center;
             margin-bottom: 20px;
         }
 
         .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 25px;
-            font-size: 1rem;
+            padding: 14px 35px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0;
+            font-size: 0.75rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
+            transition: all 0.2s ease;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: transparent;
+            color: #fff;
+            font-family: inherit;
         }
 
         .btn-primary {
-            background: linear-gradient(90deg, #00d9ff, #00ff88);
-            color: #1a1a2e;
+            background: #fff;
+            color: #000;
+            border-color: #fff;
         }
 
         .btn-primary:hover:not(:disabled) {
-            transform: scale(1.05);
-            box-shadow: 0 4px 20px rgba(0, 217, 255, 0.4);
+            background: rgba(255, 255, 255, 0.9);
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: #eee;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
         }
 
         .btn-secondary:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.3;
             cursor: not-allowed;
         }
 
         .visualizer {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            height: 80px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0;
+            height: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -228,17 +331,18 @@
 
         .status {
             text-align: center;
-            margin-top: 15px;
-            font-size: 0.85rem;
-            color: #888;
+            margin-top: 18px;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 1px;
         }
 
         .status.error {
-            color: #ff6b6b;
+            color: rgba(255, 100, 100, 0.8);
         }
 
         .status.success {
-            color: #00ff88;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         input[type="file"] {
@@ -248,23 +352,48 @@
         .volume-control {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 12px;
+            margin-bottom: 18px;
         }
 
         .volume-control label {
             margin-bottom: 0;
-            min-width: 50px;
+            min-width: 20px;
+            font-size: 1rem;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            cursor: pointer;
+            border: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎵 Any2Noise</h1>
-        <p class="subtitle">Turn any file into audio</p>
+        <h1>any2noise</h1>
+        <p class="subtitle">Raw file audio interpreter</p>
 
         <div class="upload-zone" id="uploadZone">
-            <div class="upload-icon">📁</div>
+            <div class="upload-icon">[+]</div>
             <div class="upload-text">
                 Drop any file here or click to browse
             </div>
@@ -320,8 +449,8 @@
         </div>
 
         <div class="playback-controls">
-            <button class="btn btn-primary" id="playBtn" disabled>▶ Play</button>
-            <button class="btn btn-secondary" id="stopBtn" disabled>■ Stop</button>
+            <button class="btn btn-primary" id="playBtn" disabled>Play</button>
+            <button class="btn btn-secondary" id="stopBtn" disabled>Stop</button>
         </div>
 
         <div class="visualizer">
@@ -553,13 +682,13 @@
 
             sourceNode.start(0);
             isPlaying = true;
-            playBtn.textContent = '⏸ Playing...';
+            playBtn.textContent = 'Playing...';
             playBtn.disabled = true;
             stopBtn.disabled = false;
 
             sourceNode.onended = () => {
                 isPlaying = false;
-                playBtn.textContent = '▶ Play';
+                playBtn.textContent = 'Play';
                 playBtn.disabled = !audioBuffer;
                 stopBtn.disabled = true;
                 if (animationId) {
@@ -580,7 +709,7 @@
                 sourceNode = null;
             }
             isPlaying = false;
-            playBtn.textContent = '▶ Play';
+            playBtn.textContent = 'Play';
             playBtn.disabled = !audioBuffer;
             stopBtn.disabled = true;
             if (animationId) {
@@ -613,11 +742,7 @@
                 for (let i = 0; i < bufferLength; i++) {
                     const barHeight = (dataArray[i] / 255) * visualizerCanvas.height;
                     
-                    const gradient = visualizerCtx.createLinearGradient(0, visualizerCanvas.height, 0, 0);
-                    gradient.addColorStop(0, '#00d9ff');
-                    gradient.addColorStop(1, '#00ff88');
-                    
-                    visualizerCtx.fillStyle = gradient;
+                    visualizerCtx.fillStyle = `rgba(255, 255, 255, ${0.3 + (dataArray[i] / 255) * 0.7})`;
                     visualizerCtx.fillRect(x, visualizerCanvas.height - barHeight, barWidth, barHeight);
                     
                     x += barWidth + 1;
