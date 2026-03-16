@@ -506,6 +506,9 @@
             }
         });
 
+        // Initialize volume display from slider value (persists on reload)
+        volumeValue.textContent = `${volumeSlider.value}%`;
+
         // File upload handling
         uploadZone.addEventListener('click', () => fileInput.click());
         uploadZone.addEventListener('dragover', (e) => {
