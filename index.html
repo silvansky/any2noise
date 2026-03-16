@@ -338,6 +338,17 @@
             height: 100%;
         }
 
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            min-height: 1.2em;
+            font-variant-numeric: tabular-nums;
+        }
+
         .status {
             text-align: center;
             margin-top: 18px;
@@ -503,6 +514,8 @@
             <button class="btn btn-secondary" id="saveBtn" disabled>Save as WAV</button>
         </div>
 
+        <div class="time-display" id="timeDisplay"></div>
+
         <div class="visualizer">
             <canvas id="visualizer"></canvas>
         </div>
@@ -519,6 +532,7 @@
         let gainNode = null;
         let isPlaying = false;
         let animationId = null;
+        let playbackStartTime = 0;
 
         // Elements
         const uploadZone = document.getElementById('uploadZone');
@@ -528,6 +542,7 @@
         const clearBtn = document.getElementById('clearBtn');
         const playBtn = document.getElementById('playBtn');
         const saveBtn = document.getElementById('saveBtn');
+        const timeDisplay = document.getElementById('timeDisplay');
         const statusEl = document.getElementById('status');
         const visualizerCanvas = document.getElementById('visualizer');
         const visualizerCtx = visualizerCanvas.getContext('2d');
@@ -589,6 +604,7 @@
             playBtn.disabled = true;
             saveBtn.disabled = true;
             statusEl.textContent = '';
+            timeDisplay.textContent = '';
             audioBuffer = null;
         });
 
@@ -709,11 +725,18 @@
                 }
             }
 
-            // Calculate duration
-            const duration = totalSamples / sampleRate;
-            const minutes = Math.floor(duration / 60);
-            const seconds = (duration % 60).toFixed(1);
-            statusEl.textContent = `Duration: ${minutes}:${seconds.padStart(5, '0')} | Samples: ${totalSamples.toLocaleString()}`;
+            updateTimeDisplay(0, audioBuffer.duration);
+        }
+
+        function formatTime(t) {
+            const m = Math.floor(t / 60);
+            const s = Math.floor(t % 60);
+            const ms = Math.floor((t % 1) * 10);
+            return `${m}:${String(s).padStart(2, '0')}.${ms}`;
+        }
+
+        function updateTimeDisplay(current, total) {
+            timeDisplay.textContent = `${formatTime(current)} / ${formatTime(total)}`;
         }
 
         function togglePlay() {
@@ -741,6 +764,7 @@
             gainNode.connect(audioContext.destination);
 
             sourceNode.start(0);
+            playbackStartTime = audioContext.currentTime;
             isPlaying = true;
             playBtn.textContent = 'Stop';
 
@@ -773,6 +797,7 @@
                 cancelAnimationFrame(animationId);
                 animationId = null;
             }
+            if (audioBuffer) updateTimeDisplay(0, audioBuffer.duration);
             // Clear visualizer
             visualizerCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             visualizerCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
@@ -795,6 +820,7 @@
                 if (!isPlaying) return;
                 animationId = requestAnimationFrame(draw);
                 analyser.getByteFrequencyData(dataArray);
+                updateTimeDisplay(audioContext.currentTime - playbackStartTime, audioBuffer.duration);
 
                 const w = visualizerCanvas.width;
                 const h = visualizerCanvas.height;
